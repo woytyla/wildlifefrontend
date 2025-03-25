@@ -20,7 +20,7 @@ interface WildlifeDetection {
 export default function WildlifeDetectionDashboard() {
   const [wildlifeDetections, setWildlifeDetections] = useState<WildlifeDetection[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [center, setCenter] = useState<[number, number]>([9.9816, 76.2999]) // Default: India center
+  const [center, setCenter] = useState<[number, number] | null>([20.5937, 78.9629]) // Default: India center
 
   const fetchDetections = (place: string) => {
     fetch(`http://13.60.80.122:5000/latest-spotting?place=${place}`)
@@ -63,22 +63,23 @@ export default function WildlifeDetectionDashboard() {
             <CardTitle>Detection Map</CardTitle>
           </CardHeader>
           <CardContent>
-            <MapContainer center={center}zoom={10} style={{ height: "450px", width: "100%" }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {wildlifeDetections.map((detection) => (
-                <Marker key={detection.id} position={[detection.latitude, detection.longitude]}>
-                  <Popup>
-                    <h3 className="font-medium">{detection.animal_name}</h3>
-                    <p className="text-xs">{format(new Date(detection.detection_time), "PPp")}</p>
-                    <img src={detection.image_url} alt={detection.animal_name} className="w-32 h-20 mt-2 rounded-md" />
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
+            {center && (
+              <MapContainer center={center} zoom={10} style={{ height: "450px", width: "100%" }}>
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {wildlifeDetections.map((detection) => (
+                  <Marker key={detection.id} position={[detection.latitude, detection.longitude]}>
+                    <Popup>
+                      <h3 className="font-medium">{detection.animal_name}</h3>
+                      <p className="text-xs">{format(new Date(detection.detection_time), "PPp")}</p>
+                      <img src={detection.image_url} alt={detection.animal_name} className="w-32 h-20 mt-2 rounded-md" />
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            )}
           </CardContent>
         </Card>
       </main>
     </div>
   )
 }
-
