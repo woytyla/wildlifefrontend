@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import { format } from "date-fns"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { LatLngExpression } from "leaflet" // ✅ Import this
 import "leaflet/dist/leaflet.css"
 
 interface WildlifeDetection {
@@ -20,20 +21,19 @@ interface WildlifeDetection {
 export default function WildlifeDetectionDashboard() {
   const [wildlifeDetections, setWildlifeDetections] = useState<WildlifeDetection[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [center, setCenter] = useState<[number, number] | null>([20.5937, 78.9629]) // Default: India center
+  const [center, setCenter] = useState<LatLngExpression>([9.9816, 76.2999]) // ✅ Fixed type
 
   const fetchDetections = (place: string) => {
-    fetch(`http://13.60.80.122:5000/latest-spotting?place=${place}`)
+    fetch(`http://13.53.134.177:5000/latest-spotting?place=${place}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.error) {
-          console.error("Error:", data.error)
-        } else {
-          console.log(data)
-          setWildlifeDetections(data)
-          if (data.length > 0) {
-            setCenter([data[0].latitude, data[0].longitude]) // Center map to first detection
-          }
+        if (!Array.isArray(data)) {
+          console.error("Invalid response:", data)
+          return
+        }
+        setWildlifeDetections(data)
+        if (data.length > 0) {
+          setCenter([data[0].latitude, data[0].longitude]) // ✅ Always a valid LatLngExpression
         }
       })
       .catch((error) => console.error("Error fetching data:", error))
@@ -63,20 +63,18 @@ export default function WildlifeDetectionDashboard() {
             <CardTitle>Detection Map</CardTitle>
           </CardHeader>
           <CardContent>
-            {center && (
-              <MapContainer center={center} zoom={10} style={{ height: "450px", width: "100%" }}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {wildlifeDetections.map((detection) => (
-                  <Marker key={detection.id} position={[detection.latitude, detection.longitude]}>
-                    <Popup>
-                      <h3 className="font-medium">{detection.animal_name}</h3>
-                      <p className="text-xs">{format(new Date(detection.detection_time), "PPp")}</p>
-                      <img src={detection.image_url} alt={detection.animal_name} className="w-32 h-20 mt-2 rounded-md" />
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-            )}
+            <MapContainer center={center as LatLngExpression} zoom={10} style={{ height: "450px", width: "100%" }}>
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {wildlifeDetections.map((detection) => (
+                <Marker key={detection.id} position={[detection.latitude, detection.longitude]}>
+                  <Popup>
+                    <h3 className="font-medium">{detection.animal_name}</h3>
+                    <p className="text-xs">{format(new Date(detection.detection_time), "PPp")}</p>
+                    <img src={detection.image_url} alt={detection.animal_name} className="w-32 h-20 mt-2 rounded-md" />
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </CardContent>
         </Card>
       </main>
