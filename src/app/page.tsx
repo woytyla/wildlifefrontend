@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LatLngExpression } from "leaflet" // ✅ Import this
 import "leaflet/dist/leaflet.css"
+import Image from "next/image"
 
 interface WildlifeDetection {
   id: number
@@ -70,7 +71,7 @@ export default function WildlifeDetectionDashboard() {
                   <Popup>
                     <h3 className="font-medium">{detection.animal_name}</h3>
                     <p className="text-xs">{format(new Date(detection.detection_time), "PPp")}</p>
-                    <img src={detection.image_url} alt={detection.animal_name} className="w-32 h-20 mt-2 rounded-md" />
+                    <Image src={detection.image_url} alt={detection.animal_name} width={128} height={80} className="w-32 h-20 mt-2 rounded-md" />
                   </Popup>
                 </Marker>
               ))}
